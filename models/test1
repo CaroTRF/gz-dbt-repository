@@ -1,0 +1,30 @@
+WITH sub1 AS (
+    SELECT
+        s.*,
+        p.purchase_price
+    FROM {{ ref('stg_gz_raw_data__raw_gz_sales') }} s
+    LEFT JOIN {{ ref('stg_gz_raw_data__raw_gz_product') }} p
+    USING (products_id)
+),
+
+sub2 AS (
+    SELECT 
+        date_date, 
+        products_id, 
+        quantity,
+        revenue, 
+        CAST(purchase_price AS FLOAT64) AS purchase_price
+    FROM sub1
+),
+
+sub3 AS (
+    SELECT
+        *,
+        ROUND((quantity * purchase_price), 1) AS purchase_cost
+    FROM sub2
+)
+
+SELECT 
+    *, 
+    ROUND((revenue - purchase_cost), 1) AS margin
+FROM sub3
